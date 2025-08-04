@@ -1,0 +1,33 @@
+# Node
+node_modules/
+.cache/
+*.log
+
+# Build
+/dist/
+/build/
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env*
+
+# TypeScript
+*.tsbuildinfo
+
+# Others
+*.eslintcache
+*.swp
+*.swo
+
+# Coverage
+coverage/
+
+# Misc
+*.bak
+*.tmp
