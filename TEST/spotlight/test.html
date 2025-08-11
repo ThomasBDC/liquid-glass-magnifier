@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Projecteur Canvas avec poussière</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; overflow: hidden; height: 100vh; background: red;
+  }
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="spotlight"></canvas>
+
+<script>
+(() => {
+  const canvas = document.getElementById('spotlight');
+  const ctx = canvas.getContext('2d');
+
+  let width, height;
+  function resize() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Position de la souris (projecteur)
+  let mouseX = width / 2;
+  let mouseY = height / 2;
+
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  // Variables globales du cône (à mettre à jour à chaque frame)
+  let apexX, apexY, p1x, p1y, p2x, p2y;
+  let dirX, dirY, length, normX, normY;
+
+  // Fonction pour tester si un point est dans un triangle
+  function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
+    const v0x = cx - ax;
+    const v0y = cy - ay;
+    const v1x = bx - ax;
+    const v1y = by - ay;
+    const v2x = px - ax;
+    const v2y = py - ay;
+
+    const dot00 = v0x * v0x + v0y * v0y;
+    const dot01 = v0x * v1x + v0y * v1y;
+    const dot02 = v0x * v2x + v0y * v2y;
+    const dot11 = v1x * v1x + v1y * v1y;
+    const dot12 = v1x * v2x + v1y * v2y;
+
+    const invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+    const u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+    const v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+    return (u >= 0) && (v >= 0) && (u + v <= 1);
+  }
+
+  // Particules (poussière) dans le faisceau
+  class Particle {
+    constructor() {
+      this.reset();
+    }
+    reset() {
+      // Génération aléatoire DANS le cône, en coordonnées locales (distance & angle)
+      let tries = 0;
+      do {
+        // Position aléatoire dans un rectangle plus large que le cône
+        const rangeRadius = 300;
+        this.x = mouseX + (Math.random() - 0.5) * rangeRadius * 2;
+        this.y = mouseY + (Math.random() - 1) * rangeRadius * 2;
+
+        tries++;
+        if(tries > 100) {
+          this.x = mouseX;
+          this.y = mouseY;
+          break;
+        }
+      } while(!pointInTriangle(this.x, this.y, p1x, p1y, p2x, p2y, apexX, apexY));
+
+      this.size = 0.1 + Math.random();
+      // vitesse vectorielle orientée selon le cône (normX, normY)
+      const speed = 0.5 + Math.random() * 0.3;
+      this.vx = normX * speed;
+      this.vy = normY * speed;
+      this.alpha = 0.1 + Math.random() * 0.3;
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      this.alpha -= 0.005;
+
+      if (!pointInTriangle(this.x, this.y, p1x, p1y, p2x, p2y, apexX, apexY) || this.alpha <= 0) {
+        this.reset();
+      }
+    }
+    draw(ctx) {
+      ctx.save();
+      ctx.globalAlpha = this.alpha;
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.size, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  const particlesCount = 30;
+  const particles = [];
+  for(let i=0; i<particlesCount; i++) {
+    particles.push(new Particle());
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+
+    // 1) Dessiner l'overlay noir semi-transparent
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, width, height);
+
+    
+    // 2) Creuser un trou circulaire transparent (projecteur)
+    ctx.globalCompositeOperation = 'destination-out';
+    const holeRadius = 120;
+
+    ctx.beginPath();
+    ctx.arc(mouseX, mouseY, holeRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3) Dessiner le faisceau lumineux conique avec sommet fixe à gauche (lampe torche)
+    ctx.globalCompositeOperation = 'source-over';
+
+    const coneHeight = 1000 + mouseY;
+    const coneWidth = holeRadius * 2;
+
+    apexX = 0;               
+    apexY = mouseY - coneHeight;
+
+    dirX = mouseX - apexX;
+    dirY = mouseY - apexY;
+    length = Math.sqrt(dirX*dirX + dirY*dirY);
+    normX = dirX / length;
+    normY = dirY / length;
+
+    // vecteur perpendiculaire
+    const perpX = -normY;
+    const perpY = normX;
+
+    // points base du cône (perp à la direction)
+    p1x = mouseX + perpX * (coneWidth / 2);
+    p1y = mouseY + perpY * (coneWidth / 2);
+
+    p2x = mouseX - perpX * (coneWidth / 2);
+    p2y = mouseY - perpY * (coneWidth / 2);
+
+    // dégradé du sommet vers la base
+    const gradient = ctx.createLinearGradient(apexX, apexY, mouseX, mouseY);
+    gradient.addColorStop(0, 'rgba(255,255,255,0.4)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+
+    ctx.fillStyle = gradient;
+
+    ctx.beginPath();
+    ctx.moveTo(p1x, p1y);
+    ctx.lineTo(p2x, p2y);
+    ctx.lineTo(apexX, apexY);
+    ctx.closePath();
+    ctx.fill();
+
+    // 4) Dessiner les particules dans le faisceau
+    particles.forEach(p => {
+      p.update();
+      p.draw(ctx);
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+
+})();
+</script>
+
+</body>
+</html>

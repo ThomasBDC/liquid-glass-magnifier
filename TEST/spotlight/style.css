@@ -1,0 +1,315 @@
+:root{
+    --x: 50vw;
+    --y: 50vh;
+    --spot-size: 420px; /* diamètre du projecteur */
+    --soft-edge: 120px; /* zone lumineuse interne */
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background: radial-gradient(1200px 700px at 80% 10%, #26313b 0%, #1a1c20 40%, #0f0f10 100%);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    color:#fff;
+    overflow:hidden;
+  }
+
+  /* arrière-plan étoilé (léger) */
+  .stars{
+    position:fixed;
+    inset:0;
+    background-image:
+      radial-gradient(circle at 85% 12%, rgba(255,255,255,0.9) 0 1px, transparent 2px),
+      radial-gradient(circle at 78% 8%, rgba(255,255,255,0.6) 0 1px, transparent 2px),
+      radial-gradient(circle at 88% 20%, rgba(255,255,255,0.5) 0 1px, transparent 2px),
+      radial-gradient(circle at 50% 18%, rgba(255,255,255,0.06) 0 2px, transparent 3px);
+    background-size: 100% 100%;
+    pointer-events:none;
+    mix-blend-mode:screen;
+    filter: blur(0.6px) saturate(110%);
+    opacity:0.85;
+  }
+
+  /* vignette sombre générale */
+  .vignette{
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(1200px 900px at 50% 65%, rgba(0,0,0,0.0) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.75) 100%);
+    pointer-events:none;
+  }
+
+  /* couche qui contient le spotlight */
+  .overlay{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+  }
+
+  /* le cercle lumineux (projecteur) */
+  .spot{
+    position:absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--spot-size);
+    height: var(--spot-size);
+    transform: translate(-50%,-50%);
+    border-radius:50%;
+    pointer-events:none;
+    /* gradient central pour simuler le coeur lumineux + bords doux */
+    background:
+      radial-gradient(circle at 50% 40%,
+        rgba(255,255,255,0.98) 0px,
+        rgba(255,255,255,0.94) 40px,
+        rgba(246,246,250,0.85) 80px,
+        rgba(230,230,235,0.55) 120px,
+        rgba(200,200,210,0.18) 160px,
+        rgba(180,180,190,0.06) 200px,
+        rgba(0,0,0,0) 240px
+      );
+    filter: blur(6px) saturate(120%);
+    mix-blend-mode: screen;
+    box-shadow:
+      0 12px 50px rgba(0,0,0,0.6) inset,
+      0 30px 80px rgba(0,0,0,0.6);
+  }
+
+  /* le faisceau discret (cone) */
+  .spot::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform-origin: 50% 0%;
+    transform: translate(-50%,-6%) rotate(18deg);
+    width: calc(var(--spot-size) * 0.6);
+    height: calc(var(--spot-size) * 1.2);
+    /* conic / ellipse pour faire un faisceau doux */
+    background:
+      linear-gradient(180deg,
+        rgba(255,255,255,0.28) 0%,
+        rgba(255,255,255,0.10) 35%,
+        rgba(255,255,255,0.03) 58%,
+        rgba(255,255,255,0.00) 100%
+      );
+    clip-path: ellipse(50% 35% at 50% 0%);
+    filter: blur(18px);
+    opacity:0.9;
+    pointer-events:none;
+  }
+
+  /* un léger halo externe pour adoucir la transition */
+  .spot::before{
+    content:"";
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width: calc(var(--spot-size) * 1.15);
+    height: calc(var(--spot-size) * 1.15);
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 35%, transparent 60%);
+    filter: blur(28px);
+    pointer-events:none;
+  }
+
+  /* exemple de bulle de message placée dans le spot */
+  .demo-bubble{
+    position: absolute;
+    left: calc(var(--x) + 40px);
+    top: calc(var(--y) - 10px);
+    transform: translate(-50%,-50%);
+    pointer-events:none;
+  }
+  .bubble{
+    display:inline-block;
+    background: linear-gradient(180deg,#0b84ff,#0b78e6);
+    color:white;
+    padding:10px 14px;
+    border-radius:18px;
+    font-weight:600;
+    box-shadow: 0 6px 18px rgba(10,20,40,0.5);
+    min-width:64px;
+    text-align:center;
+  }
+
+  /* petit bouton flèche et x (visuel) */
+  .controls{
+    position:absolute;
+    left: calc(var(--x) + 150px);
+    top: calc(var(--y) + 40px);
+    transform: translate(-50%,-50%);
+    pointer-events:none;
+  }
+  .circle{
+    width:36px;height:36px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#1b85ff,#1a6fe0);box-shadow:0 6px 16px rgba(0,0,0,0.45);
+    margin-left:10px;font-weight:700;color:white;font-size:18px;
+  }
+  .cancel{
+    width:36px;height:36px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#b5b8bd,#8d8f92);margin-left:18px;color:white;font-weight:700;
+    box-shadow:0 6px 12px rgba(0,0,0,0.45);
+  }
+
+  /* petit indicateur en bas (dots) comme sur l'image */
+  .dots{
+    position:fixed;
+    bottom:32px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:8px;
+    pointer-events:none;
+    opacity:0.9;
+  }
+  .dots span{
+    width:8px;height:8px;border-radius:50%;background:rgba(0,0,0,0.72);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+  }
+
+  /* responsive / mobile tweaks */
+  @media (max-width:600px){
+    :root{ --spot-size: 360px; }
+    .spot{ filter: blur(5px); }
+  }:root{
+    --bg:#0f1113;            /* fond sombre */
+    --spot-size:420px;      /* diamètre du spot */
+    --spot-intensity:0.95;  /* blanc au centre */
+    --spot-soft:120px;      /* flou */
+    --beam-angle:40deg;     /* angle du faisceau */
+    --beam-length:220px;    /* longueur du faisceau */
+    --dust-count:12;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, rgba(0,0,0,0.35) 60%), var(--bg);
+    font-family:sans-serif;
+    overflow:hidden;
+  }
+
+  /* zone simulant l'écran sombre */
+  .stage{
+    position:relative;
+    width:100%;
+    height:100%;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:none;
+  }
+
+  /* vignette sombre globale */
+  .vignette{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background: radial-gradient(60% 50% at 50% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.7) 100%);
+  }
+
+  /* Le projecteur (rond lumineux) */
+  .spot{
+    position:absolute;
+    width:var(--spot-size);
+    height:var(--spot-size);
+    border-radius:50%;
+    pointer-events:none;
+    transform:translate(-50%,-50%);
+    will-change:transform, left, top;
+    /* noyau clair + dégradé puis transparence */
+    background: radial-gradient(circle at 50% 40%,
+      rgba(255,255,255,var(--spot-intensity)) 0%,
+      rgba(230,235,255,0.55) 30%,
+      rgba(180,185,200,0.25) 50%,
+      rgba(0,0,0,0) 75%
+    );
+    filter: blur(var(--spot-soft));
+    mix-blend-mode:screen; /* donne un rendu plus lumineux sur fond sombre */
+    opacity:0.95;
+  }
+
+  /* Faisceau discret (ellipse / cône) */
+  .beam{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:var(--beam-length);
+    height:calc(var(--spot-size) * 0.9);
+    transform-origin:left center;
+    transform:translate(-50%,-30%) rotate(var(--beam-angle));
+    pointer-events:none;
+    border-radius:50% / 50%;
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0.28) 0%,
+      rgba(255,255,255,0.12) 15%,
+      rgba(255,255,255,0.03) 40%,
+      rgba(255,255,255,0) 100%);
+    filter: blur(22px);
+    mix-blend-mode:screen;
+    opacity:0.7;
+  }
+
+  /* léger halo central (pour durcir le centre) */
+  .spot::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    box-shadow: 0 0 28px 12px rgba(255,255,255,0.06) inset;
+    pointer-events:none;
+  }
+
+  /* particules/poussières animées */
+  .dust{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    overflow:visible;
+  }
+  .dust span{
+    --x:50vw;
+    --y:50vh;
+    position:absolute;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.35));
+    opacity:0;
+    transform:translate(var(--x),var(--y)) scale(.6);
+    filter:blur(1px);
+    animation:float var(--dur) linear infinite;
+  }
+
+  /* animation de flottement + apparition/disparition */
+  @keyframes float{
+    0%   { transform: translate(var(--x), var(--y)) translateY(-8px) scale(.6); opacity:0; }
+    10%  { opacity:1; }
+    50%  { transform: translate(var(--x), var(--y)) translateY(6px) scale(1); opacity:0.9; }
+    100% { transform: translate(var(--x), var(--y)) translateY(-12px) scale(.8); opacity:0; }
+  }
+
+  /* exemple de contenu (bulle bleue) pour tester blend */
+  .message{
+    position:absolute;
+    right:18%;
+    top:42%;
+    transform:translateY(-50%);
+    pointer-events:none;
+  }
+  .bubble{
+    display:inline-block;
+    padding:10px 14px;
+    border-radius:16px;
+    background:#0a84ff;
+    color:white;
+    font-weight:600;
+    box-shadow:0 6px 16px rgba(5,5,20,0.5);
+  }
+
+  /* options responsive : réduire taille spot sur petit écran */
+  @media (max-width:420px){
+    :root{ --spot-size:320px; --spot-soft:90px; --beam-length:160px; }
+  }
