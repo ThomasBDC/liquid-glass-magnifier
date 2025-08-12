@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Loupe zoom libre</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      height: 2000px;
+      background: linear-gradient(135deg, #f8f9fa, #dee2e6);
+    }
+
+    #content {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    #magnifier {
+      position: fixed;
+      pointer-events: none;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 3px solid black;
+      box-shadow: 0 0 8px rgba(0,0,0,0.4);
+      overflow: hidden;
+      display: none;
+      z-index: 10000;
+      background: white;
+    }
+
+    #clone {
+      position: absolute;
+      transform-origin: top left;
+      transform: scale(2);
+      pointer-events: none;
+      user-select: none;
+
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+
+      width: 100%;
+      height: 100%;
+    }
+
+    p {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #222;
+    }
+  </style>
+</head>
+<body id="all">
+  <div id="content">
+    <h1>Loupe Zoom sur Toute la Page (libre)</h1>
+    <p>Déplace ta souris n’importe où sur cette page pour voir l’effet loupe.</p>
+    <p>Le zoom s’applique sur tout le contenu, pas seulement une image.</p>
+    <p>Tu peux ajouter ici plein de contenu : texte, images, vidéos, boutons...</p>
+    <p>Cette loupe suit la souris et montre la zone zoomée sous elle.</p>
+    <p>Teste en scrollant et en bougeant la souris.</p>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec bibendum, elit nec lobortis consequat, purus elit convallis urna, sed consequat mi tortor vitae metus.</p>
+    <p>Aliquam erat volutpat. Curabitur scelerisque pretium enim, ut feugiat odio sollicitudin ut. Nulla facilisi.</p>
+  </div>
+
+  <div id="magnifier"></div>
+
+  <script>
+    (() => {
+      const magnifier = document.getElementById('magnifier');
+      const content = document.getElementById('all');
+      const zoom = 2;
+
+      // Cloner le contenu
+      const clone = content.cloneNode(true);
+      clone.id = 'clone';
+
+      // Fixer taille clone à la taille du contenu d’origine
+      const rect = content.getBoundingClientRect();
+      clone.style.width = rect.width + 'px';
+      clone.style.height = rect.height + 'px';
+
+      magnifier.appendChild(clone);
+
+      document.addEventListener('mousemove', e => {
+        magnifier.style.display = 'block';
+
+        const w = magnifier.offsetWidth / 2;
+        const h = magnifier.offsetHeight / 2;
+
+        let x = e.clientX - w;
+        let y = e.clientY - h;
+
+        // Suppression des limites : la loupe peut sortir de l'écran librement
+        // if (x < 0) x = 0;
+        // if (y < 0) y = 0;
+        // if (x + magnifier.offsetWidth > window.innerWidth) x = window.innerWidth - magnifier.offsetWidth;
+        // if (y + magnifier.offsetHeight > window.innerHeight) y = window.innerHeight - magnifier.offsetHeight;
+
+        magnifier.style.left = x + 'px';
+        magnifier.style.top = y + 'px';
+
+        const pageX = e.pageX;
+        const pageY = e.pageY;
+
+        clone.style.left = `calc(${-pageX * zoom}px + ${w}px + ${window.scrollX * zoom}px)`;
+        clone.style.top = `calc(${-pageY * zoom}px + ${h}px + ${window.scrollY * zoom}px)`;
+      });
+
+      document.addEventListener('mouseleave', () => {
+        magnifier.style.display = 'none';
+      });
+    })();
+  </script>
+</body>
+</html>

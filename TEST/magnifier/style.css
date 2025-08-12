@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+  height: 2000px; /* juste pour pouvoir scroller */
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+body {
+  margin: 0; padding: 20px; font-family: Arial, sans-serif;
+}
+#magnifier {
+  position: fixed;
+  pointer-events: none;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 3px solid black;
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
+  overflow: hidden;
+  display: none;
+  z-index: 1000;
+  background: white;
+}
+#magnifier #clone {
+  position: absolute;
+  transform-origin: top left;
+  transform: scale(2);
+  pointer-events: none;
+}
+
